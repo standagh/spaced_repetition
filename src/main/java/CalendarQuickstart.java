@@ -90,7 +90,7 @@ public class CalendarQuickstart {
             System.out.println(String.format("Doing - %d", remind_day));
 
             start = new DateTime(cal_remind.getTimeInMillis());
-            end = new DateTime(cal_remind.getTimeInMillis() + 1800000);
+            end = new DateTime(cal_remind.getTimeInMillis() + 900000);
 
             event = new Event().setStart(new EventDateTime().setDateTime(start))
                     .setEnd(new EventDateTime().setDateTime(end)).setSummary(String.format("PLI: %s - rem %d", args[0], remind_day));
