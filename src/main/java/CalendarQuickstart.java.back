@@ -76,7 +76,40 @@ public class CalendarQuickstart {
     }
 
     public static void main(String... args) throws IOException, GeneralSecurityException {
-    		
+
+        if(args.length != 1) throw new RuntimeException("Missing task text as parameter");
+
+        // Build a new authorized API client service.
+        final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+        Calendar service = new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
+                .setApplicationName(APPLICATION_NAME).build();
+
+        // List the next 10 events from the primary calendar.
+        DateTime start, end;
+        Event event;
+        int[] remind_days = REMIND_DAYS;
+        GregorianCalendar cal_now, cal_remind;
+
+        cal_now = new java.util.GregorianCalendar();
+        cal_now.set(java.util.Calendar.HOUR_OF_DAY, 19);
+        cal_now.set(java.util.Calendar.MINUTE, 0);
+
+        for (int remind_day : remind_days) {
+            cal_remind = (GregorianCalendar) cal_now.clone();
+            cal_remind.add(java.util.Calendar.DAY_OF_MONTH, remind_day);
+
+            System.out.println(String.format("Doing - %d", remind_day));
+
+            start = new DateTime(cal_remind.getTimeInMillis());
+            end = new DateTime(cal_remind.getTimeInMillis() + 1800000);
+
+            event = new Event().setStart(new EventDateTime().setDateTime(start))
+                    .setEnd(new EventDateTime().setDateTime(end)).setSummary(String.format("PLI: %s - rem %d", args[0], remind_day));
+            
+            service.events().insert("primary", event).execute();
+            System.out.println(String.format("- done - %d", remind_day));
+        }
+
         System.out.println("Done all");
 
         // DateTime st = event.getStart().getDateTime();

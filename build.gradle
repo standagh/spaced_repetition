@@ -20,6 +20,7 @@ dependencies {
     compile 'com.google.api-client:google-api-client:1.23.0'
     compile 'com.google.oauth-client:google-oauth-client-jetty:1.23.0'
     compile 'com.google.apis:google-api-services-calendar:v3-rev305-1.23.0'
+    testImplementation 'junit:junit:4.12'
 }
 
 task customFatJar(type: Jar) {
@@ -29,4 +30,9 @@ task customFatJar(type: Jar) {
     baseName = 'all-in-one-jar'
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
+}
+
+test {
+    useJUnit()
+    maxHeapSize = '2G'
 }
