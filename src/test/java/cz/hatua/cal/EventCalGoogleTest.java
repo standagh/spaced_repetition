@@ -9,7 +9,7 @@ public class EventCalGoogleTest {
 	@Test
 	public void initClass() {
 		EventCalGoogle evc = new EventCalGoogle();
-		assertTrue(1 == 1);
+		assertTrue(2 == 2);
 	}
 	
 }

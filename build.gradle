@@ -25,9 +25,9 @@ dependencies {
 
 task customFatJar(type: Jar) {
     manifest {
-        attributes 'Main-Class': 'CalendarQuickstart'
+        attributes 'Main-Class': 'cz.hatua.cal.Processor'
     }
-    baseName = 'all-in-one-jar'
+    baseName = 'spaced_repetition_build'
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
 }
