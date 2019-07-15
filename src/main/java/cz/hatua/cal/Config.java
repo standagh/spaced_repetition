@@ -2,10 +2,10 @@ package cz.hatua.cal;
 
 public class Config {
 
-	public enum Action { ADD, LIST, DELETE };
-	public Action action;
-	public String topic;
-	public int[] days = { 1, 3, 8, 22, 120 }; 
+	enum Action { ADD, LIST, DELETE };
+	Action action;
+	String topic;
+	int[] days = { 1, 3, 8, 22, 120 }; 
 
 	public String toString() {
 		String s = "";

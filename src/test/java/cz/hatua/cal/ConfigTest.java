@@ -12,12 +12,12 @@ public class ConfigTest {
 
 	Logger log;
 	
-	public ConfigTest() {
+	ConfigTest() {
 		this.log = Logger.getLogger(this.getClass().getName());
 	}
 	
 	@Test
-	public void init1() {
+	void init1() {
 		Config c = new Config();
 		c.action = Action.ADD;
 		c.topic = "New entry";

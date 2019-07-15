@@ -1,7 +1,10 @@
 package cz.hatua.cal;
 
-public interface EventCal {
+import java.util.GregorianCalendar;
+import java.util.List;
 
-	public void actionAdd(String topic, int[] days);
-	
+interface EventCal {
+	void actionAdd(String topic, int[] days);
+	// TODO tests and startDay
+	List<SpacedEvent> actionList(String topic, GregorianCalendar startDay);
 }

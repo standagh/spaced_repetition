@@ -1,5 +1,7 @@
 package cz.hatua.cal;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class Processor {
@@ -16,6 +18,12 @@ public class Processor {
 		
 		if(c.action == Config.Action.ADD) {
 			ec.actionAdd(c.topic, c.days);
+		} else if(c.action == Config.Action.LIST) {
+			List<SpacedEvent> se = ec.actionList("*", null);
+			for (Iterator<SpacedEvent> iterator = se.iterator(); iterator.hasNext();) {
+				SpacedEvent spacedEvent = (SpacedEvent) iterator.next();
+				System.out.print("Spaced event: " + spacedEvent.topic + "\n");
+			}
 		} else {
 			log.info(String.format("Action '%s' not implemented", c.action));
 		}

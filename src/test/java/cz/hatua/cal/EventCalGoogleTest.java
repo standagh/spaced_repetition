@@ -7,7 +7,7 @@ import org.junit.Test;
 public class EventCalGoogleTest {
 
 	@Test
-	public void initClass() {
+	void initClass() {
 		EventCalGoogle evc = new EventCalGoogle();
 		assertTrue(2 == 2);
 	}

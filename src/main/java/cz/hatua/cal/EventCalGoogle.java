@@ -18,6 +18,7 @@ import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
 import com.google.api.services.calendar.model.EventDateTime;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
@@ -27,8 +28,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.util.GregorianCalendar;
+import java.util.Iterator;
 
-public class EventCalGoogle implements EventCal {
+class EventCalGoogle implements EventCal {
 
     private static final String APPLICATION_NAME = "Google Calendar API Java Quickstart";
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
@@ -70,10 +72,9 @@ public class EventCalGoogle implements EventCal {
     }
 
 
-	public EventCalGoogle() {
-		Logger log = Logger.getLogger(this.getClass().getName());
-		log.info("This is log message");
-	}
+//	EventCalGoogle() {
+//		Logger log = Logger.getLogger(this.getClass().getName());
+//	}
 
 	@Override
 	public void actionAdd(String topic, int[] remind_days) {
@@ -124,5 +125,47 @@ public class EventCalGoogle implements EventCal {
                 .setApplicationName(APPLICATION_NAME).build();
         return service;
 	}
+
+
+	@Override
+	public List<SpacedEvent> actionList(String topic, GregorianCalendar startDay) {
+		// TODO Auto-generated method stub
+        Calendar service;
+		try {
+			service = this.getService();
+		} catch (GeneralSecurityException e) {
+			throw new RuntimeException(e);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		DateTime now = new DateTime(System.currentTimeMillis());
+        Events events;
+		try {
+			events = service.events().list("primary")
+			        .setMaxResults(100)
+			        .setTimeMin(now)
+			        .setOrderBy("startTime")
+			        .setSingleEvents(true)
+			        .execute();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		
+        List<Event> items = events.getItems();
+        ArrayList<SpacedEvent> spacedEvents = new ArrayList<SpacedEvent>(items.size());
+        if (items.size() == 0) return spacedEvents;
+        
+        for (Iterator<Event> iterator = items.iterator(); iterator.hasNext();) {
+			Event event = iterator.next();
+			if(event.getSummary().startsWith("PLI: ")) {
+				spacedEvents.add(new SpacedEvent(event.getSummary().substring(4)));
+			}
+		}
+
+        return spacedEvents;
+        
+	}
+	
 	
 }
