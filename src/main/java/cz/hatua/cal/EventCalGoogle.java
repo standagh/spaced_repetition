@@ -16,26 +16,37 @@ import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
+
 import com.google.api.services.calendar.model.EventDateTime;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
+import java.text.ParseException;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+import java.util.logging.Logger;
 
 class EventCalGoogle implements EventCal {
 
     private static final String APPLICATION_NAME = "Google Calendar API Java Quickstart";
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
-
+    
+    static final Pattern SUMMARY_PATTERN = Pattern.compile("^(PLI: )(.*)( - rem) ([0-9]+)$");
+    
+    static final Logger logs = Logger.getLogger(EventCalGoogle.class.getName());
+    
     /**
      * Global instance of the scopes required by this quickstart. If modifying these
      * scopes, delete your previously saved tokens/ folder.
@@ -47,6 +58,11 @@ class EventCalGoogle implements EventCal {
 
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
 
+    Logger logd;
+    EventCalGoogle() {
+        logd = Logger.getLogger("mylog");
+	}
+    
     /**
      * Creates an authorized Credential object.
      * 
@@ -129,8 +145,8 @@ class EventCalGoogle implements EventCal {
 
 	@Override
 	public List<SpacedEvent> actionList(String topic, GregorianCalendar startDay) {
-		// TODO Auto-generated method stub
         Calendar service;
+        this.logd.info("Doing list");
 		try {
 			service = this.getService();
 		} catch (GeneralSecurityException e) {
@@ -153,18 +169,51 @@ class EventCalGoogle implements EventCal {
 		}
 		
         List<Event> items = events.getItems();
-        ArrayList<SpacedEvent> spacedEvents = new ArrayList<SpacedEvent>(items.size());
-        if (items.size() == 0) return spacedEvents;
+        HashMap<String, SpacedEvent> spacedEvents = new HashMap<String, SpacedEvent>(items.size());
+        if (items.size() == 0) return new ArrayList<SpacedEvent>(0);;
         
         for (Iterator<Event> iterator = items.iterator(); iterator.hasNext();) {
 			Event event = iterator.next();
-			if(event.getSummary().startsWith("PLI: ")) {
-				spacedEvents.add(new SpacedEvent(event.getSummary().substring(4)));
+			
+			try {
+				Map<String, Object> summaryElements = EventCalGoogle.parseSummary(event.getSummary());
+				
+				String summ = (String)summaryElements.get("summ");
+				Integer remd = (Integer)summaryElements.get("remd");
+				
+				SpacedEvent spacedEvnt = spacedEvents.get(summ);
+				if( spacedEvnt == null ) {
+					// We don't have this item
+					logd.info(String.format("Creating new spaced event '%s'", summ));
+					spacedEvnt = new SpacedEvent(summ);
+					spacedEvents.put(summ, spacedEvnt);
+				}
+				
+				spacedEvnt.addRemindDay((Integer)(summaryElements.get("remd")));
+
+			} catch (ParseException e) {
+				logd.severe(String.format("Parse exception for summary: '%s'",event.getSummary()));
+				continue;
 			}
 		}
 
-        return spacedEvents;
+        return new ArrayList<SpacedEvent>(spacedEvents.values());
         
+	}
+	
+	static Map<String, Object> parseSummary(String summary) throws ParseException {
+		Map<String, Object> ret = new HashMap<String, Object>(2);
+
+        Matcher m = EventCalGoogle.SUMMARY_PATTERN.matcher(summary);
+        if( m.find() ) {
+        	Integer remd =  Integer.valueOf(m.group(4));
+        	logs.info(String.format("Parsing summary '%s' as: '%s'/'%d'", summary, m.group(2), remd));
+        	ret.put("summ", m.group(2));
+        	ret.put("remd", remd);
+        	return ret;
+        }
+        
+        throw new ParseException(String.format("Unable to parse summary '%s'", summary), -1);
 	}
 	
 	

@@ -22,7 +22,7 @@ public class Processor {
 			List<SpacedEvent> se = ec.actionList("*", null);
 			for (Iterator<SpacedEvent> iterator = se.iterator(); iterator.hasNext();) {
 				SpacedEvent spacedEvent = (SpacedEvent) iterator.next();
-				System.out.print("Spaced event: " + spacedEvent.topic + "\n");
+				System.out.print("Spaced event: " + spacedEvent.toString() + "\n");
 			}
 		} else {
 			log.info(String.format("Action '%s' not implemented", c.action));
