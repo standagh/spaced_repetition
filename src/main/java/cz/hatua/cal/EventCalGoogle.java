@@ -21,6 +21,7 @@ import com.google.api.services.calendar.model.EventDateTime;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -155,12 +156,15 @@ class EventCalGoogle implements EventCal {
 			throw new RuntimeException(e);
 		}
 
-		DateTime now = new DateTime(System.currentTimeMillis());
+		GregorianCalendar startList = new GregorianCalendar();
+		// TODO: dafault -120day for list of elements
+		startList.add(java.util.Calendar.DAY_OF_MONTH,-120);
+		DateTime startListDT = new DateTime(startList.getTime().getTime());
         Events events;
 		try {
 			events = service.events().list("primary")
 			        .setMaxResults(100)
-			        .setTimeMin(now)
+			        .setTimeMin(startListDT)
 			        .setOrderBy("startTime")
 			        .setSingleEvents(true)
 			        .execute();
@@ -186,6 +190,8 @@ class EventCalGoogle implements EventCal {
 					// We don't have this item
 					logd.info(String.format("Creating new spaced event '%s'", summ));
 					spacedEvnt = new SpacedEvent(summ);
+					spacedEvnt.setFirstDay((Integer)(summaryElements.get("remd")), 
+							EventCalGoogle.convertEventStartToGregorian(event.getStart()));
 					spacedEvents.put(summ, spacedEvnt);
 				}
 				
@@ -199,6 +205,14 @@ class EventCalGoogle implements EventCal {
 
         return new ArrayList<SpacedEvent>(spacedEvents.values());
         
+	}
+	
+	static GregorianCalendar convertEventStartToGregorian(EventDateTime timePoint) {
+		Date dt = new Date();
+		dt.setTime(timePoint.getDateTime().getValue());
+		GregorianCalendar gc = new GregorianCalendar();
+		gc.setTime(dt);
+		return gc;
 	}
 	
 	static Map<String, Object> parseSummary(String summary) throws ParseException {
