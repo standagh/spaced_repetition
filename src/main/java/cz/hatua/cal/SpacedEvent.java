@@ -1,6 +1,7 @@
 package cz.hatua.cal;
 
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -43,17 +44,31 @@ public class SpacedEvent {
 	
 	public String toString() {
 		StringBuilder ret = new StringBuilder();
-		ret.append(String.format("'%s' -", this.topic));
-		for (Integer rdval : remindDays) {
-			ret.append(" " + rdval);
-		}
+		ret.append(String.format("'%s' ", this.topic));
 		if( firstDay != null ) {
-		    SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");
-		    fmt.setCalendar(firstDay);
-		    String dateFormatted = fmt.format(firstDay.getTime());	
-		    ret.append(" (" + dateFormatted + ") ");
-			
+		    ret.append(" (" + new SimpleDateFormat("yyyyMMdd").format(firstDay.getTime()) + ") ");
+		}
+		ret.append(" " + remindDays.toString() + " ");
+		if( firstDay != null ) {
+			ret.append(" " + getRemindDaysRelative(new GregorianCalendar()) + " ");
 		}
 		return ret.toString();
+	}
+	
+	ArrayList<Integer> getRemindDaysRelative(GregorianCalendar gc) {
+		if(firstDay == null) {
+			throw new RuntimeException("Unable to calculate relative remind days. StartDay not set.");
+		}
+
+		gc.set(java.util.Calendar.HOUR_OF_DAY, 19);
+		gc.set(java.util.Calendar.MINUTE, 0);
+	        
+		// count day diff
+		long dayOffset = Duration.between(gc.toInstant(), firstDay.toInstant()).toDays();
+		ArrayList<Integer> retAL = new ArrayList<Integer>(remindDays.size());
+		for(Integer i: remindDays) {
+			retAL.add(i + Integer.valueOf(Long.valueOf(dayOffset).intValue()));
+		}
+		return retAL;
 	}
 }

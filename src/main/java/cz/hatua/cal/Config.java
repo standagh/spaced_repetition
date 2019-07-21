@@ -1,21 +1,23 @@
 package cz.hatua.cal;
 
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.GregorianCalendar;
+
 public class Config {
 
 	enum Action { ADD, LIST, DELETE };
 	Action action;
 	String topic;
-	int[] days = { 1, 3, 8, 22, 120 }; 
+	int[] days = { 1, 3, 8, 22, 120 };
+	GregorianCalendar startDay = null;
 
 	public String toString() {
-		String s = "";
-		for (int i = 0; i < days.length; i++) {
-			if(i == 0) s = "[";
-			if(i > 0) s = s + ",";
-			s = s + " " + Integer.toString(days[i]);
+		String startDayString = "now";
+		if(startDay != null) {
+			startDayString = new SimpleDateFormat("yyyy-MM-dd").format(startDay.getTime());
 		}
-		s = s + " ]";
-		return String.format("Action '%s' for topic '%s' and days '%s'", action.toString(), topic, s ); 
+		return String.format("Action '%s' for topic '%s' and days '%s' starting from '%s'", action.toString(), topic, Arrays.toString(days), startDayString ); 
 	}
 	
 }

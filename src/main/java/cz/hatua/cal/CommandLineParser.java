@@ -1,5 +1,8 @@
 package cz.hatua.cal;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.GregorianCalendar;
 import java.util.logging.Logger;
 
 public class CommandLineParser {
@@ -13,19 +16,18 @@ public class CommandLineParser {
 	}
 	
 	/*
-	 args:
-	 0 ... command - add or list or delete
-	 if add:
-	 	1 ... topic
-	 if delete:
-	 	1 ... topic
-	 if list
-	 	1 ... topic or '*' means everything
+	 params:
+	 add <topic>
+	 	days <list_of_days>
+	 	startday <yyyyMMdd>
+	 delete <topic>
+	 list <topic>
+	 
 	  
 	 */
 	public static Config parseCMDParams(String... args) {
 		Config c = new Config();
-		
+			
 		if (args.length < 2) throw new RuntimeException("Invalid input parameters - at least 2 params expected. First is one of 'add|list|delete'");
 		
 		switch (args[0]) {
@@ -46,13 +48,30 @@ public class CommandLineParser {
 		c.topic = args[1];
 		
 		if(c.action == Config.Action.ADD && args.length > 2) {
-			if(!args[2].equals("days")) throw new RuntimeException("missing parameter days for action 'add'");
-			if(args.length < 4) throw new RuntimeException("missing value for parameter 'days'");
-			c.days = CommandLineParser.parseValueDays(args[3]);
+			CommandLineParser.parseParamsActionAdd(args, c, 2);
 		}
 		
 		log.info(String.format("Config: ", c));
 		return c;
+	}
+	
+	static void parseParamsActionAdd(String[] args, Config c, int argIndex) {
+		while(true) {
+			if(args.length <= argIndex) return;
+			log.info( String.format("Parsing param: '%s'", args[argIndex]) );
+			
+			if(args[argIndex].equals("days")) {
+				argIndex++;
+				c.days = CommandLineParser.parseValueDays(args[argIndex++]);
+				continue;
+			}
+			if(args[argIndex].equals("startday")) {
+				argIndex++;
+				c.startDay = CommandLineParser.parseValueStartDay(args[argIndex++]);
+				continue;
+			}
+			throw new RuntimeException(String.format("Invalid parameter '%s'", args[argIndex]));
+		}
 	}
 	
 	static int[] parseValueDays(String days) {
@@ -63,6 +82,17 @@ public class CommandLineParser {
 			ret[i] = Integer.valueOf(sd[i].trim()); 
 		}
 		return ret;
+	}
+	
+	static GregorianCalendar parseValueStartDay(String start) {
+		GregorianCalendar gc = new GregorianCalendar();
+		try {
+			gc.setTime(new SimpleDateFormat("yyyyMMdd").parse(start));
+			return gc;
+		} catch(ParseException e) {
+			// this is same handling as IntegerValueOf - which is runtimeException successor
+			throw new RuntimeException(e);
+		}
 	}
 	
 }

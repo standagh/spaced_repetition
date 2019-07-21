@@ -17,7 +17,11 @@ public class Processor {
 		EventCal ec = new EventCalGoogle();
 		
 		if(c.action == Config.Action.ADD) {
-			ec.actionAdd(c.topic, c.days);
+			if(c.startDay == null) {
+				ec.actionAdd(c.topic, c.days);
+			} else {
+				ec.actionAdd(c.topic, c.days, c.startDay);
+			}
 		} else if(c.action == Config.Action.LIST) {
 			List<SpacedEvent> se = ec.actionList("*", null);
 			for (Iterator<SpacedEvent> iterator = se.iterator(); iterator.hasNext();) {

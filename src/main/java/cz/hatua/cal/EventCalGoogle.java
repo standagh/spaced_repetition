@@ -13,7 +13,6 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.DateTime;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.Calendar;
-import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
 
@@ -36,7 +35,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-import java.util.logging.Logger;
 
 class EventCalGoogle implements EventCal {
 
@@ -45,6 +43,7 @@ class EventCalGoogle implements EventCal {
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
     
     static final Pattern SUMMARY_PATTERN = Pattern.compile("^(PLI: )(.*)( - rem) ([0-9]+)$");
+    static final Pattern SUMMARY_PATTERN2 = Pattern.compile("^(PLI: )(.*)( \\(d)([0-9]+)\\)$");
     
     static final Logger logs = Logger.getLogger(EventCalGoogle.class.getName());
     
@@ -94,14 +93,21 @@ class EventCalGoogle implements EventCal {
 //	}
 
 	@Override
-	public void actionAdd(String topic, int[] remind_days) {
+	public void actionAdd(String topic, int[] remindDays) {
+		GregorianCalendar startDay = new GregorianCalendar();
+        startDay.set(java.util.Calendar.HOUR_OF_DAY, 19);
+        startDay.set(java.util.Calendar.MINUTE, 0);
+        actionAdd(topic, remindDays, startDay);
+    }
+		
+	@Override
+	public void actionAdd(String topic, int[] remindDays, GregorianCalendar startDay) {
         DateTime start, end;
         Event event;
-        GregorianCalendar cal_now, cal_remind;
+        GregorianCalendar startDayRemind;
 
-        cal_now = new java.util.GregorianCalendar();
-        cal_now.set(java.util.Calendar.HOUR_OF_DAY, 19);
-        cal_now.set(java.util.Calendar.MINUTE, 0);
+        startDay.set(java.util.Calendar.HOUR_OF_DAY, 19);
+        startDay.set(java.util.Calendar.MINUTE, 0);
 
         Calendar service;
 		try {
@@ -112,17 +118,17 @@ class EventCalGoogle implements EventCal {
 			throw new RuntimeException(e);
 		}
         
-        for (int remind_day : remind_days) {
-            cal_remind = (GregorianCalendar) cal_now.clone();
-            cal_remind.add(java.util.Calendar.DAY_OF_MONTH, remind_day);
+        for (int remind_day : remindDays) {
+            startDayRemind = (GregorianCalendar) startDay.clone();
+            startDayRemind.add(java.util.Calendar.DAY_OF_MONTH, remind_day);
 
             System.out.println(String.format("Doing - %d", remind_day));
 
-            start = new DateTime(cal_remind.getTimeInMillis());
-            end = new DateTime(cal_remind.getTimeInMillis() + 900000);
+            start = new DateTime(startDayRemind.getTimeInMillis());
+            end = new DateTime(startDayRemind.getTimeInMillis() + 900000);
 
             event = new Event().setStart(new EventDateTime().setDateTime(start))
-                    .setEnd(new EventDateTime().setDateTime(end)).setSummary(String.format("PLI: %s (r %d)", topic, remind_day));
+                    .setEnd(new EventDateTime().setDateTime(end)).setSummary(String.format("PLI: %s (d%d)", topic, remind_day));
             
             try {
 				service.events().insert("primary", event).execute();
@@ -183,7 +189,6 @@ class EventCalGoogle implements EventCal {
 				Map<String, Object> summaryElements = EventCalGoogle.parseSummary(event.getSummary());
 				
 				String summ = (String)summaryElements.get("summ");
-				Integer remd = (Integer)summaryElements.get("remd");
 				
 				SpacedEvent spacedEvnt = spacedEvents.get(summ);
 				if( spacedEvnt == null ) {
@@ -219,15 +224,20 @@ class EventCalGoogle implements EventCal {
 		Map<String, Object> ret = new HashMap<String, Object>(2);
 
         Matcher m = EventCalGoogle.SUMMARY_PATTERN.matcher(summary);
-        if( m.find() ) {
-        	Integer remd =  Integer.valueOf(m.group(4));
-        	logs.info(String.format("Parsing summary '%s' as: '%s'/'%d'", summary, m.group(2), remd));
-        	ret.put("summ", m.group(2));
-        	ret.put("remd", remd);
-        	return ret;
+        if( !m.find() ) {
+        	m = EventCalGoogle.SUMMARY_PATTERN2.matcher(summary);
+        	if( !m.find() ) {
+        		throw new ParseException(String.format("Unable to parse summary '%s'", summary), -1);
+        	}
         }
+
+        Integer remd =  Integer.valueOf(m.group(4));
+    	logs.info(String.format("Parsing summary '%s' as: '%s'/'%d'", summary, m.group(2), remd));
+    	ret.put("summ", m.group(2));
+    	ret.put("remd", remd);
+    	return ret;
         
-        throw new ParseException(String.format("Unable to parse summary '%s'", summary), -1);
+        
 	}
 	
 	
