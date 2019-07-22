@@ -60,8 +60,7 @@ public class SpacedEvent {
 			throw new RuntimeException("Unable to calculate relative remind days. StartDay not set.");
 		}
 
-		gc.set(java.util.Calendar.HOUR_OF_DAY, 19);
-		gc.set(java.util.Calendar.MINUTE, 0);
+		SpacedEvent.normalizeEventTime(gc);
 	        
 		// count day diff
 		long dayOffset = Duration.between(gc.toInstant(), firstDay.toInstant()).toDays();
@@ -70,5 +69,12 @@ public class SpacedEvent {
 			retAL.add(i + Integer.valueOf(Long.valueOf(dayOffset).intValue()));
 		}
 		return retAL;
+	}
+	
+	static void normalizeEventTime(GregorianCalendar event) {
+		event.set(java.util.Calendar.HOUR_OF_DAY, Config.EVENT_HOUR);
+		event.set(java.util.Calendar.MINUTE, 0);
+		event.set(java.util.Calendar.SECOND, 0);
+		event.set(java.util.Calendar.MILLISECOND, 0);
 	}
 }

@@ -95,8 +95,6 @@ class EventCalGoogle implements EventCal {
 	@Override
 	public void actionAdd(String topic, int[] remindDays) {
 		GregorianCalendar startDay = new GregorianCalendar();
-        startDay.set(java.util.Calendar.HOUR_OF_DAY, 19);
-        startDay.set(java.util.Calendar.MINUTE, 0);
         actionAdd(topic, remindDays, startDay);
     }
 		
@@ -106,8 +104,7 @@ class EventCalGoogle implements EventCal {
         Event event;
         GregorianCalendar startDayRemind;
 
-        startDay.set(java.util.Calendar.HOUR_OF_DAY, 19);
-        startDay.set(java.util.Calendar.MINUTE, 0);
+        SpacedEvent.normalizeEventTime(startDay);
 
         Calendar service;
 		try {

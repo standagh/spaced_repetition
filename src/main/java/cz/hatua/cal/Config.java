@@ -11,6 +11,9 @@ public class Config {
 	String topic;
 	int[] days = { 1, 3, 8, 22, 120 };
 	GregorianCalendar startDay = null;
+	
+	static final int EVENT_HOUR = 7;
+	
 
 	public String toString() {
 		String startDayString = "now";
