@@ -33,12 +33,15 @@ public class CommandLineParser {
 		switch (args[0]) {
 		case "add":
 			c.action = Config.Action.ADD;
+			if(args.length > 2) CommandLineParser.parseParamsActionAdd(args, c, 2);
 			break;
 		case "list":
 			c.action = Config.Action.LIST;
+			if(args.length > 2) CommandLineParser.parseParamsActionList(args, c, 2);
 			break;
 		case "delete":
 			c.action = Config.Action.DELETE;
+			if(args.length > 2) CommandLineParser.parseParamsActionDelete(args, c, 2);
 			break;
 
 		default:
@@ -46,10 +49,6 @@ public class CommandLineParser {
 		}
 		
 		c.topic = args[1];
-		
-		if(c.action == Config.Action.ADD && args.length > 2) {
-			CommandLineParser.parseParamsActionAdd(args, c, 2);
-		}
 		
 		log.info(String.format("Config: ", c));
 		return c;
@@ -74,6 +73,46 @@ public class CommandLineParser {
 		}
 	}
 	
+	static void parseParamsActionList(String[] args, Config c, int argIndex) {
+		while(true) {
+			if(args.length <= argIndex) return;
+			log.info( String.format("Parsing param: '%s'", args[argIndex]) );
+			
+			if(args[argIndex].equals("startday")) {
+				argIndex++;
+				c.startDay = CommandLineParser.parseValueStartDay(args[argIndex++]);
+				continue;
+			}
+			if(args[argIndex].equals("endday")) {
+				argIndex++;
+				c.endDay = CommandLineParser.parseValueStartDay(args[argIndex++]);
+				continue;
+			}
+
+			throw new RuntimeException(String.format("Invalid parameter '%s'", args[argIndex]));
+		}
+	}
+	
+	static void parseParamsActionDelete(String[] args, Config c, int argIndex) {
+		while(true) {
+			if(args.length <= argIndex) return;
+			log.info( String.format("Parsing param: '%s'", args[argIndex]) );
+			
+			if(args[argIndex].equals("startday")) {
+				argIndex++;
+				c.startDay = CommandLineParser.parseValueStartDay(args[argIndex++]);
+				continue;
+			}
+			if(args[argIndex].equals("endday")) {
+				argIndex++;
+				c.endDay = CommandLineParser.parseValueStartDay(args[argIndex++]);
+				continue;
+			}
+
+			throw new RuntimeException(String.format("Invalid parameter '%s'", args[argIndex]));
+		}
+	}
+
 	static int[] parseValueDays(String days) {
 		String[] sd = days.split(",");
 		int[] ret = new int[ sd.length ];

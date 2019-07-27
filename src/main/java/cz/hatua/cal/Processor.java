@@ -17,17 +17,15 @@ public class Processor {
 		EventCal ec = new EventCalGoogle();
 		
 		if(c.action == Config.Action.ADD) {
-			if(c.startDay == null) {
-				ec.actionAdd(c.topic, c.days);
-			} else {
-				ec.actionAdd(c.topic, c.days, c.startDay);
-			}
+			ec.actionAdd(c.topic, c.days, c.startDay);
 		} else if(c.action == Config.Action.LIST) {
-			List<SpacedEvent> se = ec.actionList("*", null);
+			List<SpacedEvent> se = ec.actionList(c.topic, c.startDay, c.endDay);
 			for (Iterator<SpacedEvent> iterator = se.iterator(); iterator.hasNext();) {
 				SpacedEvent spacedEvent = (SpacedEvent) iterator.next();
 				System.out.print("Spaced event: " + spacedEvent.toString() + "\n");
 			}
+		} else if(c.action == Config.Action.DELETE) {
+			ec.actionDelete(c.topic, c.startDay, c.endDay);
 		} else {
 			log.info(String.format("Action '%s' not implemented", c.action));
 		}
