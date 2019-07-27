@@ -159,6 +159,7 @@ class EventCalGoogle implements EventCal {
 				try {
 					Map<String, Object> summaryElements = EventCalGoogle.parseSummary(event.getSummary());
 					if( ((String)summaryElements.get("summ")).equals(topic)) {
+						logs.info(String.format("Going to delete event: '%s'", event.getSummary()));
 						service.events().delete("primary", event.getId()).execute();
 						numRemoved++;
 						System.out.println(String.format("Deleted item: '%s'", event.toString() ));
@@ -167,9 +168,6 @@ class EventCalGoogle implements EventCal {
 					// ok, this is not our event
 					continue;
 				}
-
-				// debug only 1 event to delete
-				break;
 			}
 		} catch (IOException e) {
 			// service.events).delete()... may throw IOException, so we want to cease processing
@@ -222,7 +220,7 @@ class EventCalGoogle implements EventCal {
 		if (items.size() == 0)
 			return new ArrayList<SpacedEvent>(0);
 
-		Pattern topicPattern = Pattern.compile("^" + topic + "$");
+		Pattern topicPattern = Pattern.compile(topic);
 
 		for (Iterator<Event> iterator = items.iterator(); iterator.hasNext();) {
 			Event event = iterator.next();
@@ -232,13 +230,11 @@ class EventCalGoogle implements EventCal {
 
 				String summ = (String) summaryElements.get("summ");
 
-				Matcher m = topicPattern.matcher(topic);
+				Matcher m = topicPattern.matcher(summ);
 				if (!m.find()) {
-					Log.info(String.format("Event with summary '%s' doesn't comply to topic pattern '%s'", summ, topic));
+					logd.info(String.format("Event with summary '%s' doesn't comply to topic pattern '%s'", summ, topic));
 					continue;
 				}
-		
-				Integer remd = Integer.valueOf(m.group(4));
 		
 				SpacedEvent spacedEvnt = spacedEvents.get(summ);
 				if (spacedEvnt == null) {
